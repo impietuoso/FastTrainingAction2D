@@ -4932,7 +4932,7 @@ MonoBehaviour:
   atrasoAtaque: 0.5
   forcaDash: 24
   duracaoDash: 0.5
-  esperaDash: 2
+  esperaDash: 0
   gravidadeDash: 0
   podeDash: 1
   estaDashando: 0
