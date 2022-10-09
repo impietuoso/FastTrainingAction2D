@@ -17,54 +17,101 @@ public class MovimentacaoEAtaques : MonoBehaviour
     [SerializeField]  private float forcaDoPulo = 8f;
     private int ContadorDePulos = 0;
     private bool olharDireita = true;
-
+    [SerializeField] private float tempoCoyote = 0.2f;
+    private float contadortempoCoyote;
 
     [Header("Ataque")]
     public Transform pontoAtaque;
     public LayerMask camadaInimigos;
     [SerializeField]  private float alcanceAtaque = 1f;
-    private int contadorDeGolpes = 0;
     [SerializeField] [Range(0,1)] private float atrasoAtaque = 0.5f;
+    private int contadorGolpesChao = 0;
+    private int contadorGolpesAereos = 0;
     private bool podeBater = true;
+
+    [Header("Dash")]
+    [SerializeField] private float forcaDash = 24f;
+    [SerializeField] private float duracaoDash = 0.5f;
+    [SerializeField] private float esperaDash = 2f;
+    [SerializeField] private float gravidadeDash;
+    [SerializeField] private bool podeDash = true;
+    [SerializeField] private bool estaDashando = false;
+    private TrailRenderer tr;
+    private float gravidadeNormal;
+
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        tr = GetComponent<TrailRenderer>();
+        gravidadeNormal = rb.gravityScale;
     }
+
 
     private void FixedUpdate()
     {
-        rb.velocity = new Vector2(horizontal * velocidade , rb.velocity.y);
+        // não permite virar nem pular nem nada enquanto está no dash
+        if (estaDashando) return;
 
+        // movimentacao
+        rb.velocity = new Vector2(horizontal * velocidade, rb.velocity.y);
+
+        // trigando animação de correr
+        if (rb.velocity.x != 0) AnimacaoCorrer();
+        else AnimacaoIdle();
+
+        // Flip
         if (!olharDireita && horizontal > 0) Virar();
-        else if(olharDireita && horizontal < 0) Virar();
+        else if (olharDireita && horizontal < 0) Virar();
 
+        // Coyote Efect e reset do ataque aéreo
+        if (EstaNoChao()) 
+        { 
+            contadortempoCoyote = tempoCoyote;
+            contadorGolpesAereos = 0;
+        } 
+        else contadortempoCoyote -= Time.deltaTime;
+
+
+        // Aumentando gravidade do pulo
         if (rb.velocity.y < 0) rb.velocity += Vector2.up * Physics2D.gravity.y * 1.5f * Time.deltaTime;
 
     }
-
+    // ===========================================================================      MOVIMENTAÇÃO        ===================================================================================
     public void Movimentacao(InputAction.CallbackContext context) 
     {
         horizontal = context.ReadValue<Vector2>().x;
     }
 
+    // ============================================================================      PULO        ===========================================================================================
     public void Pular(InputAction.CallbackContext context) 
     {
         rb.velocity = new Vector2(rb.velocity.x, 0);
-        if (context.performed && EstaNoChao()) rb.velocity = new Vector2 (rb.velocity.x, forcaDoPulo);
+        if (context.performed && contadortempoCoyote > 0) 
+        {
+            AnimacaoPular();
+            rb.velocity = new Vector2 (rb.velocity.x, forcaDoPulo);
+        }
         if (context.canceled && rb.velocity.y > 0f && ContadorDePulos == 1) {
-            rb.velocity = new Vector2(rb.velocity.x, forcaDoPulo * 0.5f);
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
             ContadorDePulos++;
+            contadortempoCoyote = 0;
         }
         ContadorDePulos++;
     }
 
+    // ===========================================================================      ATAQUE       ===========================================================================================
     private IEnumerator AtrasoAtaque() 
     {
         yield return new WaitForSeconds(atrasoAtaque);
         podeBater = true;
     }
 
+    //  
+    //  Dois possíveis tipos de Ataques -> No chão e aéreo
+    //  No chão é possível fazer um combro de 3 ataques
+    //  No ar só é possível dar um ataque 
+    //
     public void Ataque(InputAction.CallbackContext context) 
     {
         if (context.canceled && EstaNoChao() && podeBater) 
@@ -75,10 +122,11 @@ public class MovimentacaoEAtaques : MonoBehaviour
                 Debug.Log("acertou um inimigo");
             }
             podeBater = false;
-            contadorDeGolpes++;
+            AnimacaoAtaque();
+            contadorGolpesChao++;
             StartCoroutine(AtrasoAtaque());
         } 
-        else if (context.canceled && !EstaNoChao() && podeBater) 
+        else if (context.canceled && !EstaNoChao() && podeBater && contadorGolpesAereos < 1) 
         {
             Collider2D[] ataque = Physics2D.OverlapCircleAll(pontoAtaque.position, alcanceAtaque, camadaInimigos);
             foreach (Collider2D inimigo in ataque)
@@ -86,22 +134,36 @@ public class MovimentacaoEAtaques : MonoBehaviour
                 Debug.Log("acertou um inimigo");
             }
             podeBater = false;
-            contadorDeGolpes++;
+            contadorGolpesAereos++;
+            AnimacaoAtaque();
             StartCoroutine(AtrasoAtaque());
         }
-
-        //if (contadorDeGolpes == 1) {
-        //    // animação do golpe 1
-        //} else if (contadorDeGolpes == 2) {
-        //    // animação do golpe 2
-        //}
-        //else if (contadorDeGolpes == 3)
-        //{
-        //    // animação do golpe 3
-        //    contadorDeGolpes = 0;
-        //}
     }
 
+    // ===========================================================================      DASH        =============================================================================================
+    public void Dashar(InputAction.CallbackContext context) 
+    {
+        if ( context.performed && podeDash) StartCoroutine(Dash());
+    }
+
+    private IEnumerator Dash() 
+    {
+        podeDash = false;
+        estaDashando = true;
+        rb.gravityScale = 0f;
+        rb.velocity = new Vector2(  transform.localScale.x * forcaDash, 0f);
+        tr.emitting = true;
+        AnimacaoDash();
+        yield return new WaitForSeconds(duracaoDash);
+        tr.emitting = false;
+        rb.gravityScale = gravidadeNormal;
+        estaDashando = false;
+        yield return new WaitForSeconds(esperaDash);
+        podeDash = true;
+
+    }
+
+    // ===========================================================================      SUPORTE E VERIFICAÇÕES      ============================================================================
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(pontoAtaque.position, alcanceAtaque);
@@ -119,5 +181,54 @@ public class MovimentacaoEAtaques : MonoBehaviour
         Vector3 localScale = transform.localScale;
         localScale.x *= -1f;
         transform.localScale = localScale;
+    }
+
+    // ===========================================================================        ANIMAÇÕES        =====================================================================================
+    private void AnimacaoAtaque() 
+    {
+        if (EstaNoChao())
+        {
+            if (contadorGolpesChao == 1)
+            {
+                // animação do golpe 1
+            }
+            else if (contadorGolpesChao == 2)
+            {
+                // animação do golpe 2
+            }
+            else if (contadorGolpesChao == 3)
+            {
+                // animação do golpe 3
+                contadorGolpesChao = 0;
+            }
+        }
+        else 
+        { 
+            if (contadorGolpesAereos == 1) 
+            { 
+                // animação golpe aéreo
+            }
+        }
+
+    }
+
+    private void AnimacaoDash() 
+    {
+        // animação do Dash
+    }
+
+    private void AnimacaoCorrer()
+    {
+        // animação de correr
+    }
+
+    private void AnimacaoPular()
+    {
+        // animação de pular
+    }
+
+    private void AnimacaoIdle() 
+    { 
+        // Animação idle
     }
 }
