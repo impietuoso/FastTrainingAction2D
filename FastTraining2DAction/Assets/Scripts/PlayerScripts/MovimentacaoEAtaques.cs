@@ -86,18 +86,22 @@ public class MovimentacaoEAtaques : MonoBehaviour
     // ============================================================================      PULO        ===========================================================================================
     public void Pular(InputAction.CallbackContext context) 
     {
-        rb.velocity = new Vector2(rb.velocity.x, 0);
+        
         if (context.performed && contadortempoCoyote > 0) 
         {
+            rb.velocity = new Vector2(rb.velocity.x, 0);
             AnimacaoPular();
             rb.velocity = new Vector2 (rb.velocity.x, forcaDoPulo);
+            ContadorDePulos++;
         }
-        if (context.canceled && rb.velocity.y > 0f && ContadorDePulos == 1) {
+        if (context.canceled && rb.velocity.y > 0f ) {
+            rb.velocity = new Vector2(rb.velocity.x, 0);
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
             ContadorDePulos++;
             contadortempoCoyote = 0;
+            Debug.Log(ContadorDePulos);
         }
-        ContadorDePulos++;
+        
     }
 
     // ===========================================================================      ATAQUE       ===========================================================================================
