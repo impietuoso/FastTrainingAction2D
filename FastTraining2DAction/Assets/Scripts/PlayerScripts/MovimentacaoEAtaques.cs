@@ -6,10 +6,12 @@ using UnityEngine.InputSystem;
 public class MovimentacaoEAtaques : MonoBehaviour
 {
     private Rigidbody2D rb;
+    private Animator anim;
 
     [Header("Movimentação")]
     [SerializeField] private float velocidade = 8f;
     private float horizontal;
+    private bool podeMover = true;
 
     [Header("Pulo")]
     public Transform checkChao;
@@ -28,6 +30,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
     private int contadorGolpesChao = 0;
     private int contadorGolpesAereos = 0;
     private bool podeBater = true;
+    private bool estaAtacando = true;
 
     [Header("Dash")]
     [SerializeField] private float forcaDash = 24f;
@@ -44,6 +47,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         tr = GetComponent<TrailRenderer>();
+        anim = GetComponent<Animator>();
         gravidadeNormal = rb.gravityScale;
     }
 
@@ -54,11 +58,13 @@ public class MovimentacaoEAtaques : MonoBehaviour
         if (estaDashando) return;
 
         // movimentacao
-        rb.velocity = new Vector2(horizontal * velocidade, rb.velocity.y);
+        if (podeMover) rb.velocity = new Vector2(horizontal * velocidade, rb.velocity.y);
 
         // trigando animação de correr
-        if (rb.velocity.x != 0) AnimacaoCorrer();
-        else AnimacaoIdle();
+        if (!estaAtacando) {
+            if (rb.velocity.x != 0) AnimacaoCorrer();
+            else AnimacaoIdle();
+        }
 
         // Flip
         if (!olharDireita && horizontal > 0) Virar();
@@ -109,6 +115,8 @@ public class MovimentacaoEAtaques : MonoBehaviour
     {
         yield return new WaitForSeconds(atrasoAtaque);
         podeBater = true;
+        estaAtacando = false;
+        podeMover = true;
     }
 
     //  
@@ -118,6 +126,9 @@ public class MovimentacaoEAtaques : MonoBehaviour
     //
     public void Ataque(InputAction.CallbackContext context) 
     {
+        estaAtacando = true;
+        podeMover = false;
+
         if (context.canceled && EstaNoChao() && podeBater) 
         {
             Collider2D[] ataque = Physics2D.OverlapCircleAll(pontoAtaque.position, alcanceAtaque, camadaInimigos );
@@ -173,9 +184,15 @@ public class MovimentacaoEAtaques : MonoBehaviour
         Gizmos.DrawWireSphere(pontoAtaque.position, alcanceAtaque);
     }
 
-    private bool EstaNoChao() 
+    private bool EstaNoChao()
     {
-        if(Physics2D.OverlapCircle(checkChao.position, 0.1f, camadaChao)) ContadorDePulos = 0;
+        if (Physics2D.OverlapCircle(checkChao.position, 0.1f, camadaChao)) {
+            ContadorDePulos = 0;
+            if (!estaAtacando) {
+                if (rb.velocity.x != 0) AnimacaoCorrer();
+                else AnimacaoIdle();
+            }
+        } 
         return Physics2D.OverlapCircle(checkChao.position, 0.1f, camadaChao);
     }
 
@@ -194,23 +211,23 @@ public class MovimentacaoEAtaques : MonoBehaviour
         {
             if (contadorGolpesChao == 1)
             {
-                // animação do golpe 1
+                anim.Play("Atk1");// animação do golpe 1
             }
             else if (contadorGolpesChao == 2)
             {
-                // animação do golpe 2
+                anim.Play("Atk2");// animação do golpe 2
             }
             else if (contadorGolpesChao == 3)
             {
-                // animação do golpe 3
+                anim.Play("Atk3");// animação do golpe 3
                 contadorGolpesChao = 0;
             }
         }
         else 
         { 
             if (contadorGolpesAereos == 1) 
-            { 
-                // animação golpe aéreo
+            {
+                anim.Play("AtkJump");// animação golpe aéreo
             }
         }
 
@@ -218,21 +235,21 @@ public class MovimentacaoEAtaques : MonoBehaviour
 
     private void AnimacaoDash() 
     {
-        // animação do Dash
+        anim.Play("Dash");// animação do Dash
     }
 
     private void AnimacaoCorrer()
     {
-        // animação de correr
+        if (podeMover) anim.Play("Run"); // animação de correr
     }
 
     private void AnimacaoPular()
     {
-        // animação de pular
+        anim.Play("Jump");// animação de pular
     }
 
     private void AnimacaoIdle() 
-    { 
-        // Animação idle
+    {
+        anim.Play("Idle");// Animação idle
     }
 }
