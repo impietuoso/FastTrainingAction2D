@@ -5,8 +5,10 @@ using UnityEngine.InputSystem;
 
 public class MovimentacaoEAtaques : MonoBehaviour
 {
+    [Header("Prefab")]
     private Rigidbody2D rb;
     private Animator anim;
+    public GameObject player;
 
     [Header("Movimenta��o")]
     [SerializeField] private float velocidade = 8f;
@@ -203,8 +205,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
 
     private void Morte()
     {
-        Debug.Log("morreu");
-        //Respawn.instance.RespawnPlayer(gameObject);
+        Respawn.instance.RespawnPlayer(player);
     }
 
     // ===========================================================================      SUPORTE E VERIFICA��ES      ============================================================================
