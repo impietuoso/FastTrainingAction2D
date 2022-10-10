@@ -9,7 +9,7 @@ public class BalasPool : MonoBehaviour
     [Header("Bala")]
     public GameObject balaPrefab;
     private List<GameObject> balasPool = new List<GameObject>();
-    private int qtd = 00;
+    private int qtd = 100;
 
     [Header("Laser")]
     public GameObject laserPrefab;

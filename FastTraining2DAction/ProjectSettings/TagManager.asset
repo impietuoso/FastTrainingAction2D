@@ -3,19 +3,21 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Laser
+  - Bala
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
   - "Ch\xE3o"
   - Parede
   - Inimigos
   - bala
-  - 
+  - Shield
   - 
   - 
   - 

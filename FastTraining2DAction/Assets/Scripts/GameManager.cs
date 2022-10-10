@@ -1,3 +1,4 @@
+using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -77,7 +78,7 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
         CG.alpha = 1;
-        yield return null;               
+        yield return null;
     }
 
     public void HideCanvasGroup(CanvasGroup CG) {
@@ -97,11 +98,17 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
         CG.alpha = 0;
-        yield return null;        
+        yield return null;
     }
 
     public void QuitGame()
     {
         Application.Quit();
     }
+
+
+    
+    
+
+
 }

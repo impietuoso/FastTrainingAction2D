@@ -39,4 +39,9 @@ public class Bala : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    public void Refletida()
+    {
+        gameObject.SetActive(false);
+    }
+
 }

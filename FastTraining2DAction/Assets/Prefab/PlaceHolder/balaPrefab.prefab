@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8317876836871024909}
   m_Layer: 9
   m_Name: balaPrefab
-  m_TagString: Untagged
+  m_TagString: Bala
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

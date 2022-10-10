@@ -8,7 +8,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
 
-    [Header("Movimentação")]
+    [Header("Movimentaï¿½ï¿½o")]
     [SerializeField] private float velocidade = 8f;
     private float horizontal;
     private bool podeMover = true;
@@ -31,6 +31,8 @@ public class MovimentacaoEAtaques : MonoBehaviour
     private int contadorGolpesAereos = 0;
     private bool podeBater = true;
     private bool estaAtacando = true;
+    public GameObject escudo;
+    public LayerMask camadaBala;
 
     [Header("Dash")]
     [SerializeField] private float forcaDash = 24f;
@@ -54,13 +56,13 @@ public class MovimentacaoEAtaques : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // não permite virar nem pular nem nada enquanto está no dash
+        // nï¿½o permite virar nem pular nem nada enquanto estï¿½ no dash
         if (estaDashando) return;
 
         // movimentacao
         if (podeMover) rb.velocity = new Vector2(horizontal * velocidade, rb.velocity.y);
 
-        // trigando animação de correr
+        // trigando animaï¿½ï¿½o de correr
         if (!estaAtacando) {
             if (rb.velocity.x != 0) AnimacaoCorrer();
             else AnimacaoIdle();
@@ -70,7 +72,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
         if (!olharDireita && horizontal > 0) Virar();
         else if (olharDireita && horizontal < 0) Virar();
 
-        // Coyote Efect e reset do ataque aéreo
+        // Coyote Efect e reset do ataque aï¿½reo
         if (EstaNoChao()) 
         { 
             contadortempoCoyote = tempoCoyote;
@@ -83,7 +85,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
         if (rb.velocity.y < 0) rb.velocity += Vector2.up * Physics2D.gravity.y * 1.5f * Time.deltaTime;
 
     }
-    // ===========================================================================      MOVIMENTAÇÃO        ===================================================================================
+    // ===========================================================================      MOVIMENTAï¿½ï¿½O        ===================================================================================
     public void Movimentacao(InputAction.CallbackContext context) 
     {
         horizontal = context.ReadValue<Vector2>().x;
@@ -117,13 +119,16 @@ public class MovimentacaoEAtaques : MonoBehaviour
         podeBater = true;
         estaAtacando = false;
         podeMover = true;
+        escudo.SetActive(false);
     }
 
     //  
-    //  Dois possíveis tipos de Ataques -> No chão e aéreo
-    //  No chão é possível fazer um combro de 3 ataques
-    //  No ar só é possível dar um ataque 
+    //  Dois possï¿½veis tipos de Ataques -> No chï¿½o e aï¿½reo
+    //  No chï¿½o ï¿½ possï¿½vel fazer um combro de 3 ataques
+    //  No ar sï¿½ ï¿½ possï¿½vel dar um ataque 
     //
+
+    
     public void Ataque(InputAction.CallbackContext context) 
     {
         estaAtacando = true;
@@ -136,6 +141,12 @@ public class MovimentacaoEAtaques : MonoBehaviour
             {
                 Debug.Log("acertou um inimigo");
             }
+            Collider2D[] parry = Physics2D.OverlapCircleAll(pontoAtaque.position, alcanceAtaque, camadaBala);
+            foreach (Collider2D bala in parry) 
+            {
+                bala.GetComponent<Bala>().Refletida();
+            }
+            escudo.SetActive(true);
             podeBater = false;
             AnimacaoAtaque();
             contadorGolpesChao++;
@@ -148,6 +159,12 @@ public class MovimentacaoEAtaques : MonoBehaviour
             {
                 Debug.Log("acertou um inimigo");
             }
+            Collider2D[] parry = Physics2D.OverlapCircleAll(pontoAtaque.position, alcanceAtaque, camadaBala);
+            foreach (Collider2D bala in parry) 
+            {
+                bala.GetComponent<Bala>().Refletida();
+            }
+            escudo.SetActive(true);
             podeBater = false;
             contadorGolpesAereos++;
             AnimacaoAtaque();
@@ -177,8 +194,20 @@ public class MovimentacaoEAtaques : MonoBehaviour
         podeDash = true;
 
     }
+    // ===========================================================================      Morte                         ============================================================================
 
-    // ===========================================================================      SUPORTE E VERIFICAÇÕES      ============================================================================
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if(other.gameObject.tag == "Bala" || other.gameObject.tag == "Laser" ) Morte();
+    }
+
+    private void Morte()
+    {
+        Debug.Log("morreu");
+        //Respawn.instance.RespawnPlayer(gameObject);
+    }
+
+    // ===========================================================================      SUPORTE E VERIFICAï¿½ï¿½ES      ============================================================================
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(pontoAtaque.position, alcanceAtaque);
@@ -204,22 +233,22 @@ public class MovimentacaoEAtaques : MonoBehaviour
         transform.localScale = localScale;
     }
 
-    // ===========================================================================        ANIMAÇÕES        =====================================================================================
+    // ===========================================================================        ANIMAï¿½ï¿½ES        =====================================================================================
     private void AnimacaoAtaque() 
     {
         if (EstaNoChao())
         {
             if (contadorGolpesChao == 1)
             {
-                anim.Play("Atk1");// animação do golpe 1
+                anim.Play("Atk1");// animaï¿½ï¿½o do golpe 1
             }
             else if (contadorGolpesChao == 2)
             {
-                anim.Play("Atk2");// animação do golpe 2
+                anim.Play("Atk2");// animaï¿½ï¿½o do golpe 2
             }
             else if (contadorGolpesChao == 3)
             {
-                anim.Play("Atk3");// animação do golpe 3
+                anim.Play("Atk3");// animaï¿½ï¿½o do golpe 3
                 contadorGolpesChao = 0;
             }
         }
@@ -227,7 +256,7 @@ public class MovimentacaoEAtaques : MonoBehaviour
         { 
             if (contadorGolpesAereos == 1) 
             {
-                anim.Play("AtkJump");// animação golpe aéreo
+                anim.Play("AtkJump");// animaï¿½ï¿½o golpe aï¿½reo
             }
         }
 
@@ -235,21 +264,21 @@ public class MovimentacaoEAtaques : MonoBehaviour
 
     private void AnimacaoDash() 
     {
-        anim.Play("Dash");// animação do Dash
+        anim.Play("Dash");// animaï¿½ï¿½o do Dash
     }
 
     private void AnimacaoCorrer()
     {
-        if (podeMover) anim.Play("Run"); // animação de correr
+        if (podeMover) anim.Play("Run"); // animaï¿½ï¿½o de correr
     }
 
     private void AnimacaoPular()
     {
-        anim.Play("Jump");// animação de pular
+        anim.Play("Jump");// animaï¿½ï¿½o de pular
     }
 
     private void AnimacaoIdle() 
     {
-        anim.Play("Idle");// Animação idle
+        anim.Play("Idle");// Animaï¿½ï¿½o idle
     }
 }
