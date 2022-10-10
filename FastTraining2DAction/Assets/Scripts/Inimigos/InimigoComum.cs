@@ -6,7 +6,7 @@ public class InimigoComum : MonoBehaviour
 {
     public Transform posicaoBala;
 
-    private bool podeAtirar = false;
+    [SerializeField] private bool podeAtirar = false;
 
     private void Update()
     {
@@ -24,7 +24,7 @@ public class InimigoComum : MonoBehaviour
             bala.SetActive(true);
         }
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(1.5f);
         podeAtirar = true;
     }
 }

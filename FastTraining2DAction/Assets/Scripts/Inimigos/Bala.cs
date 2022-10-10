@@ -36,6 +36,7 @@ public class Bala : MonoBehaviour
     private IEnumerator Desabilitar() 
     {
         yield return new WaitForSeconds(5);
+        gameObject.SetActive(false);
     }
 
 }
